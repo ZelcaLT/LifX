@@ -1,6 +1,7 @@
 import asyncio
 import datetime
-import os 
+import os
+from typing import Optional, Set 
 import aiohttp
 import aiofiles
 import nextcord
@@ -13,7 +14,9 @@ import re
 import config
 from urllib.parse import unquote
 import json
+
 import math
+import sys
 import urllib
 import random
 import time
@@ -65,145 +68,160 @@ bot.loop.create_task(ch_pr())
 
 
 
-class HelpPageSource(menus.ListPageSource):
-    def __init__(self, help_command, data):
+ 
+
+class HelpDropdown(nextcord.ui.Select):
+    def __init__(self, help_command: "MyHelpCommand", options: list[nextcord.SelectOption]):
+        super().__init__(placeholder="Choose a category...", min_values=1, max_values=1, options=options)
         self._help_command = help_command
-        # you can set here how many items to display per page
-        super().__init__(data, per_page=2)
 
-    async def format_page(self, menu, entries):
-        """
-        Returns an embed containing the entries for the current page
-        """
-        prefix = self._help_command.context.clean_prefix
-        invoked_with = self._help_command.invoked_with
-        embed = nextcord.Embed(title="Bot Commands",
-                               colour=self._help_command.COLOUR)
-        embed.description = (
-            f'Use "{prefix}{invoked_with} command" for more info on a command.\n'
-            f'Use "{prefix}{invoked_with} category" for more info on a category.'
+    async def callback(self, interaction: nextcord.Interaction):
+        embed = (
+            await self._help_command.cog_help_embed(self._help_command.context.bot.get_cog(self.values[0]))
+            if self.values[0] != self.options[0].value
+            else await self._help_command.bot_help_embed(self._help_command.get_bot_mapping())
         )
-        # add the entries to the embed
-        for entry in entries:
-            embed.add_field(name=entry[0], value=entry[1], inline=True)
-        # set the footer to display the page number
-        embed.set_footer(
-            text=f'Page {menu.current_page + 1}/{self.get_max_pages()}')
-        return embed
+        await interaction.response.edit_message(embed=embed)
 
-class HelpButtonMenuPages(menus.ButtonMenuPages):
 
-    FIRST_PAGE = "<:pagefirst:899973860772962344>"
-    PREVIOUS_PAGE = "<:pageprev:899973860965888010>"
-    NEXT_PAGE = "<:pagenext:899973860840050728>"
-    LAST_PAGE = "<:pagelast:899973860810694686>"
-    STOP = "<:stop:899973861444042782>"
+class HelpView(nextcord.ui.View):
+    def __init__(self, help_command: "MyHelpCommand", options: list[nextcord.SelectOption], *, timeout: Optional[float] = 120.0):
+        super().__init__(timeout=timeout)
+        self.add_item(HelpDropdown(help_command, options))
+        self._help_command = help_command
 
-    def __init__(self, ctx: commands.Context, **kwargs):
-        super().__init__(**kwargs)
-        self._ctx = ctx
+    async def on_timeout(self):
+        # remove dropdown from message on timeout
+        self.clear_items()
+        await self._help_command.response.edit(view=self)
 
     async def interaction_check(self, interaction: nextcord.Interaction) -> bool:
-        """Ensure that the user of the button is the one who called the help command"""
-        return self._ctx.author == interaction.user
+        return self._help_command.context.author == interaction.user
 
 
-class NewHelpCommand(commands.MinimalHelpCommand):
-    """Custom help command override using embeds"""
+class MyHelpCommand(commands.MinimalHelpCommand):
+    def get_command_signature(self, command):
+        return f"{command.qualified_name} {command.signature}"
 
-    # embed colour
-    COLOUR = nextcord.Colour.blurple()
+    async def _cog_select_options(self) -> list[nextcord.SelectOption]:
+        options: list[nextcord.SelectOption] = []
+        options.append(nextcord.SelectOption(
+            label="Home",
+            emoji="🏠",
+            description="Go back to the main menu.",
+        ))
 
-    def get_command_signature(self, command: commands.core.Command):
-        """Retrieves the signature portion of the help page."""
-        return f"{self.context.clean_prefix}{command.qualified_name} {command.signature}"
+        for cog, command_set in self.get_bot_mapping().items():
+            filtered = await self.filter_commands(command_set, sort=True)
+            if not filtered:
+                continue
+            emoji = getattr(cog, "COG_EMOJI", None)
+            options.append(nextcord.SelectOption(
+                label=cog.qualified_name if cog else "No Category",
+                emoji=emoji,
+                description=cog.description[:100] if cog and cog.description else None
+            ))
 
-    async def send_bot_help(self, mapping: dict):
-        """implements bot command help page"""
-        prefix = self.context.clean_prefix
-        invoked_with = self.invoked_with
-        embed = nextcord.Embed(title="Bot Commands", colour=self.COLOUR)
-        avatar = self.context.bot.user.avatar
-        avatar_url = avatar.url if avatar else EmptyEmbed
-        embed.set_author(name=self.context.bot.user.name, icon_url=avatar_url)
-        embed.description = (
-            f'Use "{prefix}{invoked_with} command" for more info on a command.\n'
-            f'Use "{prefix}{invoked_with} category" for more info on a category.'
-        )
+        return options
 
-        embed_fields = []
-
-        for cog, commands in mapping.items():
-            name = "No Category" if cog is None else cog.qualified_name
-            filtered = await self.filter_commands(commands, sort=True)
-            if filtered:
-                # \u2002 = en space
-                value = "\u2002".join(
-                    f"`{c.name}`" for c in filtered)
-                if cog and cog.description:
-                    value = f"{cog.description}\n{value}"
-                # add (name, value) pair to the list of fields
-                embed_fields.append((name, value))
-
-        # create a pagination menu that paginates the fields
-        pages = HelpButtonMenuPages(
-            ctx=self.context,
-            source=HelpPageSource(self, embed_fields),
-            disable_buttons_after=True
-        )
-        await pages.start(self.context)
-
-    async def send_cog_help(self, cog: commands.Cog):
-        """implements cog help page"""
-        embed = nextcord.Embed(
-            title=f"{cog.qualified_name} Commands", colour=self.COLOUR
-        )
-        if cog.description:
-            embed.description = cog.description
-
-        filtered = await self.filter_commands(cog.get_commands(), sort=True)
-        for command in filtered:
-            embed.add_field(
-                name=self.get_command_signature(command),
-                value=command.short_doc or "...",
-                inline=False,
-            )
-
-        embed.set_footer(
-            text=f"Use {self.context.clean_prefix}help [command] for more info on a command.")
-        await self.get_destination().send(embed=embed)
-
-    async def send_group_help(self, group: commands.Group):
-        """implements group help page and command help page"""
-        embed = nextcord.Embed(title=group.qualified_name, colour=self.COLOUR)
-        if group.help:
-            embed.description = group.help
-
-        if isinstance(group, commands.Group):
-            filtered = await self.filter_commands(group.commands, sort=True)
+    async def _help_embed(
+        self, title: str, description: Optional[str] = None, mapping: Optional[str] = None,
+        command_set: Optional[Set[commands.Command]] = None, set_author: bool = False
+    ) -> nextcord.Embed:
+        embed = nextcord.Embed(title=title)
+        if description:
+            embed.description = description
+        if set_author:
+            avatar = self.context.bot.user.avatar or self.context.bot.user.default_avatar
+            embed.set_author(name=self.context.bot.user.name, icon_url=avatar.url)
+        if command_set:
+            # show help about all commands in the set
+            filtered = await self.filter_commands(command_set, sort=True)
             for command in filtered:
                 embed.add_field(
                     name=self.get_command_signature(command),
-                    value=command.short_doc or "...",
-                    inline=False,
+                    value=command.description or "...",
+                    inline=False
                 )
+        elif mapping:
+            # add a short description of commands in each cog
+            for cog, command_set in mapping.items():
+                filtered = await self.filter_commands(command_set, sort=True)
+                if not filtered:
+                    continue
+                name = cog.qualified_name if cog else "No category"
+                emoji = getattr(cog, "COG_EMOJI", None)
+                cog_label = f"{emoji} {name}" if emoji else name
+                # \u2002 is an en-space
+                cmd_list = "\u2002".join(
+                    f"`{cmd.name}`" for cmd in filtered
+                )
+                value = (
+                    f"{cog.description}\n{cmd_list}"
+                    if cog and cog.description
+                    else cmd_list
+                )
+                embed.add_field(name=cog_label, value=value)
+        return embed
 
+    async def bot_help_embed(self, mapping: dict) -> nextcord.Embed:
+        return await self._help_embed(
+            title="Bot Commands",
+            description=self.context.bot.description,
+            mapping=mapping,
+            set_author=True,
+        )
+    
+    async def send_bot_help(self, mapping: dict):
+        embed = await self.bot_help_embed(mapping)
+        options = await self._cog_select_options()
+        self.response = await self.get_destination().send(embed=embed, view=HelpView(self, options))
+
+    async def send_command_help(self, command: commands.Command):
+        emoji = getattr(command.cog, "COG_EMOJI", None)
+        embed = await self._help_embed(
+            title=f"{emoji} {command.qualified_name}" if emoji else command.qualified_name,
+            description=command.description,
+            command_set=command.commands if isinstance(command, commands.Group) else None
+        )
         await self.get_destination().send(embed=embed)
 
-    # Use the same function as group help for command help
-    send_command_help = send_group_help
+    async def cog_help_embed(self, cog: Optional[commands.Cog]) -> nextcord.Embed:
+        if cog is None:
+            return await self._help_embed(
+                title=f"No category",
+                command_set=self.get_bot_mapping()[None]
+            )
+        emoji = getattr(cog, "COG_EMOJI", None)
+        return await self._help_embed(
+            title=f"{emoji} {cog.qualified_name}" if emoji else cog.qualified_name,
+            description=cog.description,
+            command_set=cog.get_commands()
+        )
 
+    async def send_cog_help(self, cog: commands.Cog):
+        embed = await self.cog_help_embed(cog)
+        await self.get_destination().send(embed=embed)
 
-bot.help_command = NewHelpCommand()
+    # Use the same function as command help for group help
+    send_group_help = send_command_help
+
+bot.help_command = MyHelpCommand()
 
 
 """
     Main python run file
 """ 
+try:
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            bot.load_extension(f"cogs.{filename[:-3]}")
 
-for filename in os.listdir("./cogs"):
-    if filename.endswith(".py"):
-        bot.load_extension(f"cogs.{filename[:-3]}")
+
+except Exception as e:
+    print(f"{e}")
+            
+
 
     
     
@@ -215,7 +233,6 @@ async def on_ready():
 
 
     
-3
 
 
 bot.run(config.token)

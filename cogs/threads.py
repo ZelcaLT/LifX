@@ -15,7 +15,10 @@ class CodeHelp(commands.Cog, name="🖱Programming Help"):
     def __init__(self, bot):
         self.bot = bot
 
-
+    @commands.Cog.listener()
+    async def on_ready(self):
+        name = self.qualified_name
+        print(f"Loaded {name}")
 
     @commands.command()
     @commands.cooldown(1, 360, BucketType.member)

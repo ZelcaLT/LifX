@@ -17,7 +17,10 @@ class Utility(commands.Cog, name="🔌Utility"):
         self.bot = bot
 
 
-
+    @commands.Cog.listener()
+    async def on_ready(self):
+        name = self.qualified_name
+        print(f"Loaded {name}")
 
     @commands.command(name="serverinfo", description="Shows details about the server.")
     @commands.cooldown(1, 60, BucketType.member)

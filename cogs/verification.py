@@ -17,6 +17,11 @@ class Verify(commands.Cog, name="✅Verify"):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_ready(self):
+        name = self.qualified_name
+        print(f"Loaded {name}")
+        
+    @commands.Cog.listener()
     async def on_member_join(self, member):
         if self.context.guild.id == 921758771158605834:
             channel = nextcord.utils.get(self.bot.get_all_channels(), guild__name='The Coders', name='verify-here')

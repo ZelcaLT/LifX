@@ -11,12 +11,24 @@ import asyncio
 from nextcord.ext import ipc, commands
 from io import BytesIO
 
+
+
+
+
+
 class Admin(commands.Cog, name="⚙Admin"):
 
     def __init__(self, bot):
         self.bot = bot
+
+
         
     """Cogs for moderation and owner only"""
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        name = self.qualified_name
+        print(f"Loaded {name}")
    
     @commands.command(name="slowmode", description="Sets the slowmode for a channel.")
     @commands.has_permissions(manage_messages=True)
@@ -212,7 +224,7 @@ class Admin(commands.Cog, name="⚙Admin"):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message_before):
-        if message_before.author.guild.id == 921758771158605834:
+        if message_before.guild.id == 921758771158605834:
             emb = nextcord.Embed(
                 title=f"{message_before.author.name} has deleted a message | {message_before.author.id}",
                 description=f"**Content:**\n{message_before.content}\n**Channel:**\n<#{message_before.channel.id}>",
@@ -221,8 +233,8 @@ class Admin(commands.Cog, name="⚙Admin"):
             if message_before.author.bot:
                 return
             else:
-                channel = self.bot.get_channel(922276099147313174)
-                await channel.send(embed=emb)
+                mod_logging = self.bot.get_channel(922276099147313174)
+                await mod_logging.send(embed=emb)
         
         
 
@@ -239,8 +251,8 @@ class Admin(commands.Cog, name="⚙Admin"):
             if message_after.author.bot:
                 return
             else:
-                channel = self.bot.get_channel(922276099147313174)
-                await channel.send(embed=emb)
+                mod_logging = self.bot.get_channel(922276099147313174)
+                await mod_logging.send(embed=emb)
 
 
     @commands.command(name="test", description="A testing command.")
@@ -264,6 +276,8 @@ class Admin(commands.Cog, name="⚙Admin"):
                 e.add_field(name="Bot:", description=f"Is not bot", inline=False)
 
             await self.bot.get_channel(922276099147313174).send(embed=e)
+
+
 
     @commands.command(name="adminMeme", description="Shows the meme for the day.")
     @commands.has_permissions(manage_messages=True)

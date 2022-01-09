@@ -17,7 +17,11 @@ class Program(commands.Cog, name="💻Python Tags"):
     def __init__(self, bot):
         self.bot = bot
 
-
+    @commands.Cog.listener()
+    async def on_ready(self):
+        name = self.qualified_name
+        print(f"Loaded {name}")
+        
     testServer = 921758771158605834
 
     @commands.group(name="tag", description="group")

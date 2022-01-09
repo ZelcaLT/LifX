@@ -15,6 +15,11 @@ class Owner(commands.Cog, name="🔒Owner"):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        name = self.qualified_name
+        print(f"Loaded {name}")
+
     @commands.group(name="menu", description="Shows an owner-only menu for the bot.")
     @commands.is_owner()
     async def menu(self, ctx):
