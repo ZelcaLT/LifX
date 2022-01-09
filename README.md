@@ -7,3 +7,9 @@
 
 
 A discord.py bot using nextcord which can do a lot of different things. To moderation, memes, and a soon coming economy system. Tons of commands, all for your discord server. You can also support the bot by signing up to “premium” on pateron.com. This gives you a load of special features that no other server admin can use.
+
+
+If you would like to self-host this bot, follow these instructions:
+
+(in a terminal)
+``` pip install nextcord```
