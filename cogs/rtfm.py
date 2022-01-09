@@ -65,15 +65,6 @@ class RTFM(commands.Cog, name="rtfm"):
             query = 'INSERT INTO rtfm (user_id) VALUES ($1) ON CONFLICT (user_id) DO UPDATE SET count = rtfm.count + 1;'
             await ctx.db.execute(query, ctx.author.id)
 
-    def transform_rtfm_language_key(self, ctx, prefix):
-        if ctx.guild is not None:
-            #                             日本語 category
-            if ctx.channel.category_id == 490287576670928914:
-                return prefix + '-jp'
-            #                    d.py unofficial JP   Discord Bot Portal JP
-            elif ctx.guild.id in (463986890190749698, 494911447420108820):
-                return prefix + '-jp'
-        return prefix
 
 class SphinxObjectFileReader:
     # Inspired by Sphinx's InventoryFileReader
@@ -121,13 +112,13 @@ class SphinxObjectFileReader:
 
         self._rtfm_cache = cache
 
-    @commands.group(aliases=['rtfd'], invoke_without_command=True)
+    @commands.command(name="rtfm")
     async def rtfm(self, ctx, *, obj: str = None):
         """Gives you a documentation link for a nextcord.py entity.
         Events, objects, and functions are all supported through 
         a cruddy fuzzy algorithm.
         """
-        key = self.transform_rtfm_language_key(ctx, 'latest')
+        key = (ctx, 'latest')
         await self.do_rtfm(ctx, key, obj)
 
 
