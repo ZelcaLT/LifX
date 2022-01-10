@@ -185,7 +185,7 @@ class Fun(commands.Cog, name="😂Fun"):
             "42.3.113.107"
         ]
 
-        a = await ctx.send(f"Hacking into {target.display_name}'s account now...")
+        a = await ctx.send(f"Hacking into **{target.display_name}**'s account now...")
         await asyncio.sleep(1.513)
         a1 = ("Getting discord login (2fa disabled)")
         a2 = (f"Login found!\n**Email:**\n`{random.choice(email)}`\n**Password:**\n`{random.choice(password)}`")
