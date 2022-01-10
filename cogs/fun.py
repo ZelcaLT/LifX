@@ -7,6 +7,7 @@ import aiosqlite
 import urllib
 import json
 import asyncio
+import asyncpraw
 import random
 from nextcord import channel
 from nextcord.components import Button
@@ -14,6 +15,15 @@ from nextcord.ext import ipc, commands
 from nextcord.ext.commands.cooldowns import BucketType
 from nextcord.ext.commands.errors import MissingRequiredArgument
 from nextcord.types.components import ButtonStyle
+
+reddit = asyncpraw.Reddit(client_id = "id",
+                          client_secret = "secret",
+                          username = "user",
+                          password = "password",
+                          user_agent = "agent",
+                          check_for_async = False)
+
+
 
 class Fun(commands.Cog, name="😂Fun"):
 
@@ -27,6 +37,44 @@ class Fun(commands.Cog, name="😂Fun"):
     async def on_ready(self):
         name = self.qualified_name
         print(f"Loaded {name}")
+
+
+    @commands.command(name="aww", description="Shows some cute moments from reddit. (note: this command sometimes takes a while to load; this is as the bot needs to go through hundreds of posts.)", aliases=["cute"])
+    @commands.cooldown(1, 5, BucketType.member)
+    async def aww(self, ctx):
+        subreddit = await reddit.subreddit("aww")
+        all_subs = []
+        async for submission in subreddit.top(limit=250):
+            all_subs.append(submission)
+
+        random_sub = random.choice(all_subs)
+        name = random_sub.title
+        url = random_sub.url
+        author = random_sub.author
+
+
+        e = nextcord.Embed(title=name, description=f"From **u/{author}** in subreddit **aww**")
+        await ctx.reply(embed=e)
+        await ctx.send(url)
+
+    @commands.command(name="dogs", description="Doggos!", aliases=["doggos"])
+    @commands.cooldown(1, 5, BucketType.member)
+    async def dogs(self, ctx):
+        subreddit = await reddit.subreddit("lookatmydog")
+        all_subs = []
+        async for submission in subreddit.hot(limit=150):
+            all_subs.append(submission)
+
+        random_sub = random.choice(all_subs)
+        name = random_sub.title
+        url = random_sub.url
+
+        e = nextcord.Embed(title=name)
+        await ctx.reply(embed=e)
+        await ctx.send(url)
+
+
+
 
 
 
