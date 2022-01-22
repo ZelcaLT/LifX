@@ -8,11 +8,10 @@ import nextcord
 from nextcord.embeds import EmptyEmbed
 from nextcord.ext import ipc, commands, menus
 import aiosqlite
-import undetected_chromedriver.v2 as uc
-from selenium.webdriver.common.keys import Keys
 import re
 import config
 from urllib.parse import unquote
+from nextcord import Embed
 import json
 
 import math
@@ -22,18 +21,44 @@ import random
 import time
 
 
-intents = nextcord.Intents.default()
-
+intents = nextcord.Intents.all()
 
 class myBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+async def get_prefix(bot, message):
+    async with aiosqlite.connect("prefixes.db") as db:
+        async with db.cursor() as cursor:
+            await cursor.execute('SELECT prefix FROM prefixes WHERE guild = ?', (message.guild.id))
+            data = await cursor.fetchone()
+            if data:
+                return data
+            else:
+                try:
+                    await cursor.execute('INSERT INTO prefixes (prefix, guild) VALUES (?, ?)', ('==', message.guild.id))
+                    await cursor.execute('SELECT prefix FROM prefixes WHERE guild = ?', (message.guild.id))
+                    data = cursor.fetchone()
+                    if data:
+                        await cursor.execute('UPDATE prefixes SET prefix = ? WHERE guild = ? ', ('==', message.guild.id))
+                except Exception:
+                    return '=='
 
-bot = myBot(command_prefix=commands.when_mentioned_or(config.prefix), intents=intents)
+bot = myBot(command_prefix="==", intents=intents)
 bot.remove_command("help")
+bot.load_extension("jishaku")
+os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
+os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True" 
+os.environ["JISHAKU_HIDE"] = "True"
 
-
+@bot.command()  
+@commands.is_owner()
+async def guild(ctx):
+    em = nextcord.Embed(title="Guilds")
+    for guild in bot.guilds:
+        em.add_field(name=f"{guild.name}", value="cool")
+        
+    await ctx.reply(embed=em)
 
 
 class CodeButtons(nextcord.ui.View):
@@ -128,7 +153,7 @@ class MyHelpCommand(commands.MinimalHelpCommand):
         self, title: str, description: Optional[str] = None, mapping: Optional[str] = None,
         command_set: Optional[Set[commands.Command]] = None, set_author: bool = False
     ) -> nextcord.Embed:
-        embed = nextcord.Embed(title=title)
+        embed = nextcord.Embed(title=title, color=nextcord.Colour.random())
         if description:
             embed.description = description
         if set_author:
@@ -141,7 +166,7 @@ class MyHelpCommand(commands.MinimalHelpCommand):
                 embed.add_field(
                     name=self.get_command_signature(command),
                     value=command.description or "...",
-                    inline=False
+                    inline=True
                 )
         elif mapping:
             # add a short description of commands in each cog
@@ -149,7 +174,7 @@ class MyHelpCommand(commands.MinimalHelpCommand):
                 filtered = await self.filter_commands(command_set, sort=True)
                 if not filtered:
                     continue
-                name = cog.qualified_name if cog else "No category"
+                name = cog.qualified_name if cog else "❓Other"
                 emoji = getattr(cog, "COG_EMOJI", None)
                 cog_label = f"{emoji} {name}" if emoji else name
                 # \u2002 is an en-space
@@ -208,6 +233,10 @@ class MyHelpCommand(commands.MinimalHelpCommand):
 
 bot.help_command = MyHelpCommand()
 
+@bot.slash_command(name="test", description="A testing command.")
+async def test(ctx):
+    await ctx.send("testing lol\nsup nerds")
+
 
 """
     Main python run file
@@ -222,14 +251,6 @@ except Exception as e:
     print(f"{e}")
             
 
-
-    
-    
-
-
-@bot.event
-async def on_ready():
-    print(bot.user.name + " is ready.\n============================")
 
 
     

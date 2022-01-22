@@ -13,6 +13,7 @@ from nextcord.ext.commands.cooldowns import BucketType
 
 
 class Verify(commands.Cog, name="✅Verify"):
+    """Verify in **The Coders**"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -23,14 +24,18 @@ class Verify(commands.Cog, name="✅Verify"):
         
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        if self.context.guild.id == 921758771158605834:
+        if member.guild.id == 921758771158605834:
             channel = nextcord.utils.get(self.bot.get_all_channels(), guild__name='The Coders', name='verify-here')
             emb = nextcord.Embed(
-                title=f"Welcome {member.mention}",
-                description="Verify by doing the command `*verify` in this channel to get access to the server",
+                title=f"Welcome {member.display_name}",
+                description="Verify by doing the command `==verify` in this channel to get access to the server.\nMake sure to read the rules! <#921760273637998642>",
                 color=nextcord.Colour.random()
             )
+            emb.set_thumbnail(url=member.avatar.url)
             await channel.send(embed=emb)
+            await channel.send(f"[{member.mention}]")
+            chan = nextcord.utils.get(self.bot.get_all_channels(), guild__name="The Coders", name="chat")
+            await chan.send(f":wave: Welcome {member.mention}!")
             
 
     @commands.command(name="verify", description="Verify yourself for access to the server.")
@@ -40,7 +45,7 @@ class Verify(commands.Cog, name="✅Verify"):
                 verifiedRole = nextcord.utils.get(ctx.guild.roles, name="Verified")
                 e = nextcord.Embed(
                     title="Verification",
-                    description="Verify by saying `yes` and you will be granted access to the server",
+                    description="Verify by saying `confirm` and you will be granted access to the server",
                     color=nextcord.Colour.random()
                 )
 
@@ -50,7 +55,7 @@ class Verify(commands.Cog, name="✅Verify"):
                 msg = await ctx.reply(embed=e)
 
                 # we define a local variable named 'correct_answer'
-                correct_answers = 'yes'
+                correct_answers = 'confirm'
 
                 
                 def check(message : nextcord.Message) -> bool: 
@@ -61,7 +66,7 @@ class Verify(commands.Cog, name="✅Verify"):
 
             # this will be executed if the user took too long to answer
                 except asyncio.TimeoutError: 
-                    await ctx.reply("Error: timed out\nPlease re-verify by using `*verify`")           
+                    await ctx.reply("Error: timed out\nPlease re-verify by using `==verify`")           
 
             # this will be executed if the author responded properly
                 else: 

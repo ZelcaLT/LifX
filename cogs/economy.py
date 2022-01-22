@@ -11,14 +11,6 @@ from nextcord.ext import ipc, commands
 from nextcord.ext.commands.cooldowns import BucketType
 
 
-class Economy(commands.Cog, name="💲Economy"):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        name = self.qualified_name
-        print(f"Loaded {name}")
 
 
 
@@ -80,9 +72,16 @@ def remove_bal(user: nextcord.Member, amount: int):
     cursor.close()
     db.close() 
 
-class Economy(commands.Cog):
-    def __init__(self, client):
-        self.client = client
+
+class Economy(commands.Cog, name="💲Economy"):
+    """An economy system in the bot"""
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        name = self.qualified_name
+        print(f"Loaded {name}")
 
     @commands.command(name="bal", aliases=['balance'])
     @commands.cooldown(1, 3, commands.BucketType.user)

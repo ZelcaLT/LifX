@@ -12,6 +12,7 @@ from nextcord.ext.commands.cooldowns import BucketType
 
 
 class Owner(commands.Cog, name="🔒Owner"):
+    """Owner only commands"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -36,7 +37,7 @@ class Owner(commands.Cog, name="🔒Owner"):
         msg = await ctx.reply(embed=e)
     
         # we define a local variable named 'correct_answer'
-        correct_answer = 'admin1'   
+        correct_answer = "admin"
 
         
         def check(message : nextcord.Message) -> bool: 
@@ -88,12 +89,32 @@ class Owner(commands.Cog, name="🔒Owner"):
             self.bot.reload_extension(f'cogs.{arg2}')
             await ctx.send(f"Updated cogs `{arg1}` and `{arg2}`")
 
+    @commands.command()
+    @commands.is_owner()
+    async def unload(self, ctx, arg1):
+        self.bot.remove_command(arg1)
+        await ctx.reply("removed command {}".format(arg1))
+
+    @commands.command()
+    @commands.is_owner()
+    async def load(self, ctx, arg1):
+        self.bot.add_command(arg1)
+        await ctx.reply("added command {}".format(arg1))
+
 
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandError):
-            await ctx.reply("Error: {}".format(error))
+        if isinstance(error, commands.BotMissingPermissions):
+            e = nextcord.Embed(title="Error!", description="Hey! I am missing " + ', '.join(error.missing_permissions), color=nextcord.Colour.red())
+            await ctx.reply(embed=e)
+        elif isinstance(error, commands.UserInputError):
+            e = nextcord.Embed(title="Error!", description="`{}`".format(error) + ", please include this in the command!", color=nextcord.Colour.red())
+            await ctx.reply(embed=e)
+        else:
+            print(error)
+
+
 
 
 def setup(bot):

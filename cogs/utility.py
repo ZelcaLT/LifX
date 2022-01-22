@@ -1,5 +1,6 @@
 import datetime
-import os 
+import os
+from tempfile import TemporaryFile 
 import aiofiles
 import pickle
 import nextcord
@@ -8,19 +9,71 @@ import urllib
 import asyncio
 import time
 import random
+import youtube_dl
 from nextcord.ext import ipc, commands
 from nextcord.ext.commands.cooldowns import BucketType
-
+from cogs.afk import afk
+def remove(afk):
+    if "(AFK)" in afk.split():
+        return " ".join(afk.split()[1: ])
+    else:
+        return afk
 
 class Utility(commands.Cog, name="🔌Utility"):
+    """Extra commands"""
     def __init__(self, bot):
         self.bot = bot
+
+
 
 
     @commands.Cog.listener()
     async def on_ready(self):
         name = self.qualified_name
         print(f"Loaded {name}")
+
+
+
+
+
+    @commands.command()
+    async def join(self,ctx):
+        if ctx.author.voice is None:
+            await ctx.send("You're not in a voice channel!")
+        voice_channel = ctx.author.voice.channel
+        if ctx.voice_client is None:
+            await voice_channel.connect()
+        else:
+            await ctx.voice_client.move_to(voice_channel)
+
+    @commands.command()
+    async def disconnect(self,ctx):
+        await ctx.voice_client.disconnect()
+
+    @commands.command()
+    async def play(self,ctx,url):
+        ctx.voice_client.stop()
+        FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+        YDL_OPTIONS = {'format':"bestaudio"}
+        vc = ctx.voice_client
+
+        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+            info = ydl.extract_info(url, download=False)
+            url2 = info['formats'][0]['url']
+            source = await nextcord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
+            vc.play(source)
+    
+    @commands.command()
+    async def pause(self,ctx):
+        await ctx.voice_client.pause()
+        await ctx.channel.send("Paused ⏸")
+    
+    @commands.command()
+    async def resume(self,ctx):
+        await ctx.voice_client.resume()
+        await ctx.channel.send("resume ⏯")
+
+
 
     @commands.command(name="serverinfo", description="Shows details about the server.")
     @commands.cooldown(1, 60, BucketType.member)
@@ -31,7 +84,7 @@ class Utility(commands.Cog, name="🔌Utility"):
         e.add_field(name="Name", value=f"{ctx.guild.name}", inline=False)
         e.add_field(name="Member Count", value=ctx.guild.member_count)
         e.add_field(name="Verification level", value=str(ctx.guild.verification_level))
-        e.add_field(name="Highest role", value=f"<{ctx.guild.roles[-1]}")
+        e.add_field(name="Highest role", value=f"{ctx.guild.roles[-1]}")
         e.add_field(name="Number of Roles", value=str(roles1))
         e.add_field(name="Nitro boosts", value=f"{ctx.guild.premium_subscription_count}")
         e.add_field(name="Created at", value=f"{ctx.guild.created_at} UTC")
@@ -71,6 +124,9 @@ class Utility(commands.Cog, name="🔌Utility"):
             await TicketChannel.send(embed=e)
             await TicketChannel.send("[ <@&922228778279763968> ]")
 
+
+
+
         
 
 
@@ -84,16 +140,53 @@ class Utility(commands.Cog, name="🔌Utility"):
         )
         await ctx.reply(embed=em)
 
+    @commands.command()
+    async def afk(self, ctx, *, reason=None):
+        member = ctx.author
+        if member.id in afk.keys():
+            afk.pop(member.id)
+        else:
+            try:
+                await member.edit(nick=f"(AFK) {member.display_name}")
+            except Exception as e:
+                await ctx.reply(f"An error occured.\n{e}")
+            afk[member.id] = reason
+            em = nextcord.Embed(title=":zzz: Member AFK", description=f"{member.mention} is AFK", color=member.color)
+            em.set_thumbnail(url=member.avatar.url)
+            em.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar.url)
+            em.add_field(name="Note:", value=reason)
+            await ctx.reply(embed=em)
+    
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        member = message.author
+        if message.author.id in afk.keys():
+            afk.pop(message.author.id)
+            try:
+                await message.author.edit(nick=remove(message.author.display_name))
+            except Exception as e:
+                print(e)
+            await message.channel.send(f"Welcome back {message.author.mention}, I removed your AFK status. :zzz:")
+        
+        for id, reason in afk.items():
+            member = nextcord.utils.get(message.guild.members, id=id)
+            if (message.reference and member == (await message.channel.fetch_message(message.reference.message_id)).author) or message.id in message.raw_mentions:
+                await message.reply(f"{member.name} is AFK ; note : {reason}")
+        
+
+    
+        
+
 
     @commands.command()
     async def info(self, ctx):
         e = nextcord.Embed(
             title="Info",
-            description=f"Made by `ZxlcaLT#0001`\nPrefix: `*`\nSupport server: [Click](https://discord.gg/haRQahMR4V \"Support Server\")"
+            description=f"Made by `ZxlcaLT#0001`\nPrefix: `==`\nSupport server: [Click](https://discord.gg/haRQahMR4V \"Support Server\")"
         )
 
 
-        e.add_field(name="Changelog",value="```diff\n- Added 'tag' command to 'tags.py'\n- Changed prefix to '=='```")
+        e.add_field(name="Changelog",value="```diff\n- Added Economy system'\n- Changed prefix to '=='```")
         await ctx.reply(embed=e)
     
 

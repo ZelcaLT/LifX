@@ -12,6 +12,7 @@ from nextcord.ext.commands.cooldowns import BucketType
 
 
 class CodeHelp(commands.Cog, name="🖱Programming Help"):
+    """Programming help in **The Coders**"""
     def __init__(self, bot):
         self.bot = bot
 

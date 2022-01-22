@@ -11,6 +11,7 @@ from nextcord.ext.commands.cooldowns import BucketType
 
 
 class Reports(commands.Cog, name="❌Reports"):
+    """In progress"""
     def __init__(self, bot):
         self.bot = bot
 
