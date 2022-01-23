@@ -79,6 +79,8 @@ class Verify(commands.Cog, name="✅Verify"):
                     pass
             else:
                 await ctx.reply("You can't verify in this channel!")
+        else:
+            return await ctx.reply("You can't verify in this server!'")
 
 
 

@@ -100,6 +100,7 @@ class Shell(commands.Cog, name="👩‍💻Python Tests"):
         return Scope()
 
     @commands.command(parent="jsk",description="Turn variable retention for REPL on or off. Provide no argument for current status.", name="retain")
+    @commands.is_owner()
     async def jsk_retain(self, ctx: commands.Context, *, toggle: bool = None):
         """
 
@@ -176,6 +177,7 @@ class Shell(commands.Cog, name="👩‍💻Python Tests"):
         return await interface.send_to(ctx)
 
     @commands.command(name="py", description="Runs python code within the bot. (mostly for tests)",aliases=["python"])
+    @commands.is_owner()
     async def jsk_python(self, ctx: commands.Context, *, argument: codeblock_converter):
         """
         Direct evaluation of Python code.
