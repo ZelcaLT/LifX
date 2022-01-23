@@ -1,3 +1,21 @@
+ces = [
+    "shit",
+    "dick",
+    "fuck",
+    "die",
+    "kys",
+    "d1e",
+    "f4ck",
+    "cum",
+    "c0m",
+    "cvm",
+    "f4ck",
+    "cunt",
+    "ass",
+    "a$$",
+    "asshole",
+    "a$$hole"
+    ]
 import datetime
 import json
 import os
@@ -24,13 +42,35 @@ from helpers.checks import STAFF, is_staff
 
 
 
+s = 922228778279763968
 
 class Admin(commands.Cog, name="⚙Admin"):
     """Admin/Mod commands"""
     def __init__(self, bot):
         self.bot = bot
 
-    
+
+    @Cog.listener()
+    async def on_message(self, message):
+        if message.guild.id == 921758771158605834:
+            if not message.author.bot:
+                if not nextcord.utils.get(message.author.roles, id=s):
+                    for word in ces:
+                        if word in message.content:
+                           
+                            chan = self.bot.get_channel(934914628335591455)
+                            await message.delete()
+                            em = Embed(
+                                title="Automoderation",
+                                description=f"I deleted a message that contained bad language.\nFrom: {message.author.mention}",
+                                color=nextcord.Colour.red()
+                            )
+                            em.add_field(name="Message content", value=f"{message.content}", inline=False)
+                            em.add_field(name="In channel", value=f"{message.channel.mention}", inline=False)
+                            em.add_field(name="Message ID", value=f"{message.id}", inline=False)
+                            await chan.send(embed=em)
+
+        
     
 
 
@@ -183,16 +223,16 @@ class Admin(commands.Cog, name="⚙Admin"):
         if reason == None:
             reason = "No reason specified"
 
-
-        e = nextcord.Embed(
-            title="Member striked",
-            color=nextcord.Colour.red()
-        )
-        e.add_field(name="Member", value=member.mention)
-        e.add_field(name="Member ID", value=member.id)
-        e.add_field(name="Reason", value=reason)
-        e.add_field(name="Responsible moderator", value=ctx.author.mention)
-        await mod_logging.send(embed=e)
+        if ctx.guild.id == 921758771158605834:
+            e = nextcord.Embed(
+                title="Member striked",
+                color=nextcord.Colour.red()
+            )
+            e.add_field(name="Member", value=member.mention)
+            e.add_field(name="Member ID", value=member.id)
+            e.add_field(name="Reason", value=reason)
+            e.add_field(name="Responsible moderator", value=ctx.author.mention)
+            await mod_logging.send(embed=e)
 
 
         await cursor.execute("CREATE TABLE IF NOT EXISTS warn(guild_id STR, user_id STR , warn_num STR, PRIMARY KEY (guild_id, user_id))")
@@ -232,20 +272,7 @@ class Admin(commands.Cog, name="⚙Admin"):
     
 
 
-    @commands.Cog.listener()
-    async def on_message_delete(self, message_before):
-        if message_before.guild.id == 921758771158605834:
-            emb = nextcord.Embed(
-                title=f"{message_before.author.name} has deleted a message | {message_before.author.id}",
-                description=f"**Content:**\n{message_before.content}\n**Channel:**\n<#{message_before.channel.id}>",
-                color =nextcord.Colour.dark_red()
-            )
-            if message_before.author.bot:
-                return
-            else:
-                mod_logging = self.bot.get_channel(922276099147313174)
-                await mod_logging.send(embed=emb)
-        
+ 
         
 
     @commands.Cog.listener()

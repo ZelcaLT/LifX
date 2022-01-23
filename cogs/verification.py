@@ -52,7 +52,7 @@ class Verify(commands.Cog, name="✅Verify"):
 
 
 
-                msg = await ctx.reply(embed=e)
+                msg = await ctx.reply(embed=e, delete_after=10)
 
                 # we define a local variable named 'correct_answer'
                 correct_answers = 'confirm'

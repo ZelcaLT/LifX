@@ -16,7 +16,7 @@ from nextcord.mentions import A
 def createTag(name, description):
     db = sq3.connect('data/tags.sqlite')
     cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM tag WHERE name = {name}")
+    cursor.execute(f"SELECT * FROM tag WHERE name = ?", (name))
     result = cursor.fetchone()
 
     if result:
@@ -47,12 +47,15 @@ class Program(commands.Cog, name="💻Python Tags"):
         pass
 
     @tag_group.command(name="make", description="Create a new tag.")
+    @commands.is_owner()
     async def make_tag(self, ctx, name, description):
         try:
             createTag(name, description)
 
         except Exception as e:
             await ctx.reply(e)
+
+    
         
         
     

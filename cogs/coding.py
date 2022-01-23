@@ -147,7 +147,7 @@ class Documention(commands.Cog, name="📄Docs"):
         def transform(tup):
             return tup[0]
 
-        matches = fuzzy.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
+        matches = fuzzy.finder(obj, cache, key=lambda t: t[0], lazy=False)[:13]
 
         e = nextcord.Embed(colour=nextcord.Colour.blurple())
         e.set_author(name="LifX", icon_url="https://cdn.discordapp.com/avatars/922489691020873758/3acc5460a031443e4b98745ce0dbea5e.webp?size=40")

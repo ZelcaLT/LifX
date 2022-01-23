@@ -1,3 +1,4 @@
+
 import asyncio
 import datetime
 import os 
@@ -102,17 +103,6 @@ class Owner(commands.Cog, name="🔒Owner"):
         await ctx.reply("added command {}".format(arg1))
 
 
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.BotMissingPermissions):
-            e = nextcord.Embed(title="Error!", description="Hey! I am missing " + ', '.join(error.missing_permissions), color=nextcord.Colour.red())
-            await ctx.reply(embed=e)
-        elif isinstance(error, commands.UserInputError):
-            e = nextcord.Embed(title="Error!", description="`{}`".format(error) + ", please include this in the command!", color=nextcord.Colour.red())
-            await ctx.reply(embed=e)
-        else:
-            print(error)
 
 
 

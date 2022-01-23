@@ -78,7 +78,7 @@ class CodeButtons(nextcord.ui.View):
 async def ch_pr():
     await bot.wait_until_ready()
 
-    statuses = [f"{config.prefix}help",f"{len(bot.guilds)} servers",f"on {config.version}"]
+    statuses = [f"{config.prefix}help",f"{len(bot.guilds)} servers",f"{config.version}"]
 
     while not bot.is_closed():
 

@@ -1,0 +1,1 @@
+words = "fuck", "shit", "cunt", "die", "kys", "d1e", "dick", "d1ck"
