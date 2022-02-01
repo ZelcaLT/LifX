@@ -42,14 +42,15 @@ class Errors(commands.Cog, name="Errors"):
                 await ctx.reply("That member does not exist.")
             elif isinstance(error, commands.MissingRole):
                 await ctx.reply("You are missing a role for this command.")
-        except Exception as e:
-            em = nextcord.Embed(
-                title="Error ;-;",
-                description="An error occurred while executing this command. The developers have been notified of the error.",
-                color=nextcord.Colour.red()
-            )
-            em.add_field(name="Error details:", value=e)
-            await ctx.reply(embed=em)
+        except:
+            if isinstance(error, commands.CommandError):
+                em = nextcord.Embed(
+                    title="Error ;-;",
+                    description="An error occurred while executing this command. The developers have been notified of the error.",
+                    color=nextcord.Colour.red()
+                )
+                em.add_field(name="Error details:", value=error)
+                await ctx.reply(embed=em)
 
 
 

@@ -22,7 +22,7 @@ from nextcord.ext import ipc, commands
 from nextcord.ext.commands.cooldowns import BucketType
 from nextcord.ext.commands.errors import MissingRequiredArgument
 from nextcord.types.components import ButtonStyle
-from utils import hangman, twenty
+from utils import hangman, twenty, hmgroup
 
 reddit = asyncpraw.Reddit(client_id = "id",
                           client_secret = "secret",
@@ -215,6 +215,7 @@ class Fun(commands.Cog, name="😂Fun"):
                 await ctx.send("**You win :sparkles:**")
             else:
                 await ctx.send("**I win :robot:**")
+                
 
 
     @commands.command(aliases=["aki"])
@@ -341,6 +342,7 @@ class Fun(commands.Cog, name="😂Fun"):
     async def hangman(self, ctx):
         """Play Hangman"""
         await hangman.play(self.bot, ctx)
+        
 
     @commands.command()
     async def simprate(self, ctx, member: Optional[nextcord.Member], *, simpable: Optional[str],

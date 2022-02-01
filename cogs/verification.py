@@ -13,7 +13,7 @@ from nextcord.ext.commands.cooldowns import BucketType
 
 
 class Verify(commands.Cog, name="✅Verify"):
-    """Verify in **The Coders**"""
+    """Verify in **./syntax**"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -25,16 +25,16 @@ class Verify(commands.Cog, name="✅Verify"):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         if member.guild.id == 921758771158605834:
-            channel = nextcord.utils.get(self.bot.get_all_channels(), guild__name='The Coders', name='verify-here')
+            channel = nextcord.utils.get(self.bot.get_all_channels(), guild__name='./syntax', name='verify-here')
             emb = nextcord.Embed(
                 title=f"Welcome {member.display_name}",
-                description="Verify by doing the command `==verify` in this channel to get access to the server.\nMake sure to read the rules! <#921760273637998642>",
+                description="Verify by doing the command `==verify` in this channel to get access to the server.\nMake sure to read the rules! <#921760273637998642>\nThis message will auto-delete in 2 minutes.",
                 color=nextcord.Colour.random()
             )
             emb.set_thumbnail(url=member.avatar.url)
-            await channel.send(embed=emb)
+            await channel.send(embed=emb, delete_after=120)
             await channel.send(f"[{member.mention}]")
-            chan = nextcord.utils.get(self.bot.get_all_channels(), guild__name="The Coders", name="chat")
+            chan = nextcord.utils.get(self.bot.get_all_channels(), guild__name="./syntax", name="chat")
             await chan.send(f":wave: Welcome {member.mention}!")
             
 
@@ -62,7 +62,7 @@ class Verify(commands.Cog, name="✅Verify"):
                     return message.author == ctx.author and message.content == correct_answers
 
                 try:
-                    message = await self.bot.wait_for('message', timeout = 10, check = check)
+                    message = await self.bot.wait_for('message', timeout = 30, check = check)
 
             # this will be executed if the user took too long to answer
                 except asyncio.TimeoutError: 

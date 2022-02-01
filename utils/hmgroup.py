@@ -131,7 +131,7 @@ images = [
 
 async def play(bot, ctx):
     def check(m):
-        return m.author == ctx.author
+        return
 
     guesses = ""
     turns = 6

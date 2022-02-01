@@ -34,7 +34,8 @@ from nextcord.ext import ipc, commands
 from io import BytesIO
 
 from nextcord import Member, DiscordException, Embed
-from nextcord.ext.commands import Cog, Context, command
+from nextcord.ext.commands import Cog, Context, command, has_permissions
+from nextcord.utils import get as g
 
 
 from models.infraction import Infraction, InfractionType
@@ -54,7 +55,7 @@ class Admin(commands.Cog, name="⚙Admin"):
     async def on_message(self, message):
         if message.guild.id == 921758771158605834:
             if not message.author.bot:
-                if not nextcord.utils.get(message.author.roles, id=s):
+                if not g(message.author.roles, id=s):
                     for word in ces:
                         if word in message.content:
                            
@@ -79,8 +80,8 @@ class Admin(commands.Cog, name="⚙Admin"):
         name = self.qualified_name
         print(f"Loaded {name}")
 
-    @commands.command(name="mute", description="'Timeouts' a member. (specific to premium)")
-    @commands.has_permissions(manage_messages=True)
+    @command(name="mute", description="'Timeouts' a member. (specific to premium)")
+    @has_permissions(manage_messages=True)
     async def mute(self, ctx, member: nextcord.Member,time:int, *, reason=None):
         if ctx.guild.id == 921758771158605834:
             mute = ctx.guild.get_role(922857417610522674)
@@ -91,7 +92,7 @@ class Admin(commands.Cog, name="⚙Admin"):
             await member.remove_roles(everyone)
             em = Embed(
                 title="Muted",
-                description=f"You have been muted in `The Coders` | Reason: {reason} | Duration: {time}",
+                description=f"You have been muted in `./syntax` | Reason: {reason} | Duration: {time}",
                 color=nextcord.Colour.red()
             )
             await member.send(embed=em)
@@ -103,7 +104,7 @@ class Admin(commands.Cog, name="⚙Admin"):
 
             em1 = Embed(
                 title="Unmuted",
-                description=f"You have been unmuted in `The Coders` | Reason: Auto-unmute",
+                description=f"You have been unmuted in `./syntax` | Reason: Auto-unmute",
                 color=nextcord.Colour.green()
             )
             await member.send(embed=em1)
@@ -115,8 +116,8 @@ class Admin(commands.Cog, name="⚙Admin"):
 
 
    
-    @commands.command(name="slowmode", description="Sets the slowmode for a channel.")
-    @commands.has_permissions(manage_messages=True)
+    @command(name="slowmode", description="Sets the slowmode for a channel.")
+    @has_permissions(manage_messages=True)
     async def slowmode(self, ctx, time:int):
 
         if time == 0:
@@ -160,8 +161,8 @@ class Admin(commands.Cog, name="⚙Admin"):
 
 
 
-    @commands.command(name="purge", description="Clears messages.")
-    @commands.has_permissions(manage_messages=True)
+    @command(name="purge", description="Clears messages.")
+    @has_permissions(manage_messages=True)
     async def purge(self,ctx,number:int=None):
         if number == None or 0:
             return await ctx.send("I need a number of messages to purge!")
@@ -179,16 +180,16 @@ class Admin(commands.Cog, name="⚙Admin"):
         await asyncio.sleep(10)
         await msg.delete()
 
-    @commands.command(name="kick", description="Kicks someone from the guild.")
-    @commands.has_permissions(kick_members=True)
+    @command(name="kick", description="Kicks someone from the guild.")
+    @has_permissions(kick_members=True)
     async def kick(self, ctx, mem:nextcord.Member, *, reason=None):
         if reason is None:
             reason = "No reason given"
         await ctx.guild.kick(mem, reason=reason)
 
 
-    @commands.command(name="steal", description="Steals an emoji from an another server.")
-    @commands.has_permissions(manage_messages=True)
+    @command(name="steal", description="Steals an emoji from an another server.")
+    @has_permissions(manage_messages=True)
     async def steal(self, ctx, url:str, *, name=None):
         guild=ctx.guild.id
         async with aiohttp.ClientSession() as ses:
@@ -206,8 +207,8 @@ class Admin(commands.Cog, name="⚙Admin"):
                     await ctx.send("file = too thicc for me to handle")
 
 
-    @commands.command(name="strike", description="'Strikes' a user for breaking the rules.")
-    @commands.has_permissions(manage_messages=True)
+    @command(name="strike", description="'Strikes' a user for breaking the rules.")
+    @has_permissions(manage_messages=True)
     async def strike(self, ctx, member : nextcord.Member, *, reason =None):
         mod_logging = self.bot.get_channel(922276099147313174)
         if member == ctx.author:
@@ -314,8 +315,8 @@ class Admin(commands.Cog, name="⚙Admin"):
 
 
 
-    @commands.command(name="adminMeme", description="Shows the meme for the day.")
-    @commands.has_permissions(manage_messages=True)
+    @command(name="adminMeme", description="Shows the meme for the day.")
+    @has_permissions(manage_messages=True)
     async def adminMeme(self, ctx):
         await ctx.message.delete()
         memeApi = urllib.request.urlopen("https://meme-api.herokuapp.com/gimme")

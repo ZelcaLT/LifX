@@ -36,47 +36,7 @@ class Utility(commands.Cog, name="🔌Utility"):
 
 
 
-    @commands.command()
-    async def join(self,ctx):
-        if ctx.author.voice is None:
-            await ctx.send("You're not in a voice channel!")
-        voice_channel = ctx.author.voice.channel
-        if ctx.voice_client is None:
-            await voice_channel.connect()
-        else:
-            await ctx.voice_client.move_to(voice_channel)
-
-    @commands.command()
-    async def disconnect(self,ctx):
-        await ctx.voice_client.disconnect()
-
-    @commands.command()
-    async def play(self,ctx,url):
-        ctx.voice_client.stop()
-        FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-        YDL_OPTIONS = {'format':"bestaudio"}
-        vc = ctx.voice_client
-
-        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-            info = ydl.extract_info(url, download=False)
-            url2 = info['formats'][0]['url']
-            source = await nextcord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
-            vc.play(source)
-    
-    @commands.command()
-    async def pause(self,ctx):
-        await ctx.voice_client.pause()
-        await ctx.channel.send("Paused ⏸")
-    
-    @commands.command()
-    async def resume(self,ctx):
-        await ctx.voice_client.resume()
-        await ctx.channel.send("resume ⏯")
-
-
-
     @commands.command(name="serverinfo", description="Shows details about the server.")
-    @commands.cooldown(1, 60, BucketType.member)
     async def serverinfo(self, ctx):
         roles1 = len(ctx.guild.roles)
 
@@ -93,6 +53,17 @@ class Utility(commands.Cog, name="🔌Utility"):
         e.add_field(name="Nitro level", value=f"{ctx.guild.premium_tier}")
         e.set_thumbnail(url=ctx.guild.icon)
 
+        await ctx.reply(embed=e)
+    
+    @commands.command(name="channelinfo", description="Shows details about the channel.")
+    async def chaninfo(self, ctx):
+        e = nextcord.Embed(
+            timestamp=ctx.message.created_at,
+            color=nextcord.Colour.random()
+        )
+        e.add_field(name="ID", value=ctx.channel.id)
+        e.add_field(name="Name", value=ctx.channel.name)
+        e.add_field(name="Mention", value=ctx.channel.mention)
         await ctx.reply(embed=e)
 
 

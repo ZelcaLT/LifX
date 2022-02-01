@@ -72,6 +72,20 @@ def remove_bal(user: nextcord.Member, amount: int):
     cursor.close()
     db.close() 
 
+def remove_bank(user: nextcord.Member, amount: int):
+    db = sqlite3.connect('data/bank.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT * from main WHERE member_id = {user.id}")
+    result = cursor.fetchone()
+
+    sql = f"UPDATE main SET bank = ? WHERE member_id = ?"
+    val = (result[1] - amount, user.id)
+
+    cursor.execute(sql, val)
+    db.commit()
+    cursor.close()
+    db.close() 
+
 
 class Economy(commands.Cog, name="💲Economy"):
     """An economy system in the bot"""
@@ -82,6 +96,12 @@ class Economy(commands.Cog, name="💲Economy"):
     async def on_ready(self):
         name = self.qualified_name
         print(f"Loaded {name}")
+        
+    @commands.command()
+    @commands.is_owner()
+    async def givebal(self, ctx, member: nextcord.Member, amount: int):
+        add_bal(member, amount)
+        await ctx.reply(f"added {amount} coins to {member.mention}")
 
     @commands.command(name="bal", aliases=['balance'])
     @commands.cooldown(1, 3, commands.BucketType.user)
@@ -102,14 +122,56 @@ class Economy(commands.Cog, name="💲Economy"):
         embed.set_footer(text=f"Requested by {ctx.author}")
 
         await ctx.send(embed=embed)
+        
+    @commands.group(name="buy", invoke_without_command=True)
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def buy(self, ctx): 
+        pass
 
+    @buy.command(name="food")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def food(self, ctx):
+        amount = random.randrange(1, 7)
+        possibility = random.randint(1, 25)
+        if possibility == 6:
+            return await ctx.reply(f"Somebody thought you were homeless while eating and gave you the money back!") 
+        
+        if possibility == 1: 
+            amount = random.randint(7, 10)
+            remove_bal(ctx.author, amount)
+            return await ctx.reply(f"You paid {amount} <a:lifx_coin:929818468667252797> for some soup")
+        
+        remove_bal(ctx.author, amount)
+        await ctx.reply(f"You paid {amount} <a:lifx_coin:929818468667252797> for a loaf of 🍞")
+        
+    @buy.command(name="drink")
+    @commands.cooldown(1, 3, commands.BucketType.user)
+    async def drink(self, ctx):
+        amount = random.randrange(1, 7)
+        possibility = random.randint(1, 25)
+        
+        if possibility == 1: 
+            amount = random.randrange(1, 2)
+            remove_bal(ctx.author, amount)
+            return await ctx.reply(f"You paid {amount} <a:lifx_coin:929818468667252797> for 🍼")
+        
+        remove_bal(ctx.author, amount)
+        await ctx.reply(f"You paid {amount} <a:lifx_coin:929818468667252797> for a 🍺")
+        
+        
+        
     @commands.command(name="beg")
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def beg(self, ctx):
-        possibility = random.randint(1, 5)
+        possibility = random.randint(1, 100)
         if possibility == 3:
             return await ctx.send(
                 "You begged for coins but recieved a 🩴 instead"
             )
+        if possibility == 1: 
+            await ctx.reply(f"OMG! MRBEAST GAVE YOU **2,000,000** <a:lifx_coin:929818468667252797>\nYOU ARE RICH!")
+            add_bal(ctx.author, 2000000)
+            return
 
         amount = random.randrange(60, 200)
 
@@ -122,12 +184,19 @@ class Economy(commands.Cog, name="💲Economy"):
             f"I gave you **{amount}** <a:lifx_coin:929818468667252797>",
             f"The developers gave you **{amount}** <a:lifx_coin:929818468667252797>",
             f"Your computer gave you **{amount}** <a:lifx_coin:929818468667252797>",
-            f"You begged your dad for **{amount}** <a:lifx_coin:929818468667252797>"
+            f"You begged your dad for **{amount}** <a:lifx_coin:929818468667252797>",
         ]
 
         add_bal(ctx.author, amount)
         await ctx.send(random.choice(outcomes))
-
+        
+        
+    @commands.command(name="removebal")
+    @commands.is_owner()
+    async def rev(self, ctx, member: nextcord.Member, amount:int): 
+        remove_bal(member, amount)
+        await ctx.reply(f"added {amount} coins to {member.mention}")
+    
     @commands.command(name="dep", aliases=['deposit'])
     @commands.cooldown(1, 3, BucketType.user)
     async def dep(self, ctx, amount):
@@ -178,20 +247,20 @@ class Economy(commands.Cog, name="💲Economy"):
         try:
             amount = int(amount)
         except ValueError:
-            self.client.get_command("gamble").reset_cooldown(ctx)
+            self.bot.get_command("gamble").reset_cooldown(ctx)
             return await ctx.send(
                 "You have to give an integer small brain"
             )
 
         if amount < 50:
-            self.client.get_command("gamble").reset_cooldown(ctx)
+            self.bot.get_command("gamble").reset_cooldown(ctx)
             return await ctx.send(
                 "At least gamble 50 coins ._."
             )
 
         result = check_bal_greater_than(user=ctx.author, amount=amount)
         if result == False:
-            self.client.get_command("gamble").reset_cooldown(ctx)
+            self.bot.get_command("gamble").reset_cooldown(ctx)
             return await ctx.send(
                 "Your amount cannot be greater than your balance :|"
             )

@@ -3,8 +3,7 @@ import os
 import aiofiles
 import pickle
 import nextcord
-import sqlite3 as sq3
-import aiosqlite
+import aiosqlite as aio
 import urllib
 import random
 from nextcord.ext import ipc, commands
@@ -12,23 +11,6 @@ from nextcord import Interaction, SlashOption, ChannelType
 from nextcord.abc import GuildChannel
 from nextcord.ext.commands.cooldowns import BucketType
 from nextcord.mentions import A
-
-def createTag(name, description):
-    db = sq3.connect('data/tags.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM tag WHERE name = ?", (name))
-    result = cursor.fetchone()
-
-    if result:
-        return
-    if not result:
-        sql = "INSERT INTO tag(name, description) VALUES(?, ?)"
-        val = (name, description)
-
-    cursor.execute(sql, val)
-    db.commit()
-    cursor.close()
-    db.close()
 
 
 class Program(commands.Cog, name="💻Python Tags"):
@@ -42,25 +24,21 @@ class Program(commands.Cog, name="💻Python Tags"):
         
     testServer = 921758771158605834
 
-    @commands.group(name="tag", description="Use a 'tag' for help with programming.", invoke_without_command=True)
+    @commands.group(name="tag", description="group", invoke_without_command=False)
     async def tag_group(self, ctx):
         pass
 
-    @tag_group.command(name="make", description="Create a new tag.")
-    @commands.is_owner()
-    async def make_tag(self, ctx, name, description):
-        try:
-            createTag(name, description)
+    @tag_group.command(name="make")
+    async def make(self, ctx, tag_name, tag_desc):
+        db_name = "data/tags.db"
+        db = await aio.connect(db_name)
+        cursor = await db.cursor()
+        await cursor.execute("CREATE TABLE IF NOT EXISTS tags (tag_name STR, tag_desc STR, PRIMARY KEY (tag_name, tag_desc))")
+        await db.commit()
 
-        except Exception as e:
-            await ctx.reply(e)
-
-    
-        
-        
-    
-
-
+        await cursor.execute("SELECT * FROM tags WHERE tag_name", (tag_name))
+        data = await cursor.fetchone()
+        await ctx.send(data[2])
 
 
 
