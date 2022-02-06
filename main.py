@@ -35,16 +35,10 @@ async def get_prefix(bot, message):
             if data:
                 return data
             else:
-                try:
-                    await cursor.execute('INSERT INTO prefixes (prefix, guild) VALUES (?, ?)', ('==', message.guild.id))
-                    await cursor.execute('SELECT prefix FROM prefixes WHERE guild = ?', (message.guild.id))
-                    data = cursor.fetchone()
-                    if data:
-                        await cursor.execute('UPDATE prefixes SET prefix = ? WHERE guild = ? ', ('==', message.guild.id))
-                except Exception:
-                    return '=='
+                return data[0] 
+            
 
-bot = myBot(command_prefix="==", intents=intents)
+bot = myBot(command_prefix=commands.when_mentioned_or("=="), intents=intents)
 bot.remove_command("help")
 bot.load_extension("jishaku")
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"

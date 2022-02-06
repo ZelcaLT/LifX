@@ -35,7 +35,7 @@ from io import BytesIO
 
 from nextcord import Member, DiscordException, Embed
 from nextcord.ext.commands import Cog, Context, command, has_permissions
-from nextcord.utils import get as g
+from nextcord.utils import get
 
 
 from models.infraction import Infraction, InfractionType
@@ -55,7 +55,7 @@ class Admin(commands.Cog, name="⚙Admin"):
     async def on_message(self, message):
         if message.guild.id == 921758771158605834:
             if not message.author.bot:
-                if not g(message.author.roles, id=s):
+                if not get(message.author.roles, id=s):
                     for word in ces:
                         if word in message.content:
                            
@@ -70,6 +70,39 @@ class Admin(commands.Cog, name="⚙Admin"):
                             em.add_field(name="In channel", value=f"{message.channel.mention}", inline=False)
                             em.add_field(name="Message ID", value=f"{message.id}", inline=False)
                             await chan.send(embed=em)
+                            
+                            db_name = "warn.db"
+                            db = await aiosqlite.connect(db_name)
+                            cursor = await db.cursor()
+
+                            await cursor.execute("CREATE TABLE IF NOT EXISTS warn(guild_id STR, user_id STR , warn_num STR, PRIMARY KEY (guild_id, user_id))")
+                            await db.commit()
+
+                            await cursor.execute("SELECT * FROM warn WHERE guild_id = ? AND user_id = ?", (message.guild.id, message.author.id))
+                            data = await cursor.fetchone()
+
+                            
+
+                            if data is None:
+                                await cursor.execute("INSERT INTO warn(guild_id, user_id, warn_num) VALUES(?,?,?)", (message.guild.id, message.author.id, str(1)))
+                                await db.commit()
+                                await message.channel.send(f"{message.author.mention} is striked for the first time\nReason: Automoderation")
+                                return
+                            
+
+
+
+                            else:
+                                await cursor.execute("UPDATE warn SET warn_num = warn_num + ? WHERE guild_id = ? AND user_id = ?", (str(1), message.guild.id, message.author.id))
+                                await db.commit()
+                                await cursor.execute("SELECT warn_num FROM warn WHERE guild_id = ? AND user_id = ?", (message.guild.id, message.author.id))
+                                data2 = await cursor.fetchone()
+                                final = data2[0]
+                                print(final)
+                                await message.channel.send(f"{message.author.mention} has been striked {final} times\nReason: Automoderation")
+                                return
+
+            
 
         
     
@@ -278,7 +311,7 @@ class Admin(commands.Cog, name="⚙Admin"):
 
     @commands.Cog.listener()
     async def on_message_edit(self, message_before, message_after):
-        if message_before.author.guild.id == 921758771158605834:
+        if message_before.guild.id == 921758771158605834:
             emb = nextcord.Embed(
                 title=f"{message_before.author.name} has edited a message | {message_before.author.id}",
                 description=f"**Channel:**\n<#{message_before.channel.id}>",

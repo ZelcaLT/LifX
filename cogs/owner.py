@@ -22,6 +22,8 @@ class Owner(commands.Cog, name="🔒Owner"):
         name = self.qualified_name
         print(f"Loaded {name}")
 
+        
+
     @commands.group(name="menu", description="Shows an owner-only menu for the bot.")
     @commands.is_owner()
     async def menu(self, ctx):
