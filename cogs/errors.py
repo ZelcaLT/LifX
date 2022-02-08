@@ -31,7 +31,7 @@ class Errors(commands.Cog, name="Errors"):
             elif isinstance(error, commands.CommandNotFound):
                 await ctx.reply("I cannot find that command.")
             elif isinstance(error, commands.CommandOnCooldown):
-                await ctx.reply("You are on cooldown. Try again in {}".format(error.retry_after))
+                await ctx.reply("You are on cooldown. Try again in {:.2f}s".format(error.retry_after))
             elif isinstance(error, commands.MissingPermissions):
                 await ctx.reply("You are missing permissions for this command.")
             elif isinstance(error, commands.MissingRequiredArgument):
